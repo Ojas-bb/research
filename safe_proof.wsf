@@ -1,0 +1,7 @@
+<job>
+<script language="VBScript">
+    ' Safe Proof of Concept for Research
+    ' Demonstrates execution without malicious payload
+    MsgBox "Research Success: Code Execution Achieved via Polyglot Gap", 64, "Security Research PoC"
+</script>
+</job>

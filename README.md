@@ -21,9 +21,8 @@ This toolkit is designed to safely demonstrate the "Zero-Click" vulnerability ch
 
 ### Step 2: Trigger the Exploit (Simulated)
 1.  Open `local_poc.html` in Google Chrome (just double-click it).
-2.  **Auto-Open Check:** The script will attempt to inject the PDF into a hidden iframe. If you have the Adobe Reader plugin configured, the PDF may execute its Javascript (`app.alert`) immediately.
-3.  **Fallback Download:** After 1 second, the script will also force a download of `research_payload.pdf` to ensure you have the file for verification.
-4.  Go to your **Downloads** folder to find the file.
+2.  Wait 2 seconds. The page will simulate a "Zero-Click" event and automatically download a file named `research_payload.pdf`.
+3.  Go to your **Downloads** folder to find the file.
 
 ### Step 3: Verify the Vulnerability (The Evidence)
 1.  Open PowerShell in your Downloads folder.

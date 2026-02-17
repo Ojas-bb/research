@@ -16,10 +16,10 @@ I have identified a security gap where files constructed via the `Blob` API and 
 This allows a malicious website to drop a file onto the user's local filesystem that the Operating System treats as "Trusted Local Content" rather than "Internet Content". This bypasses OS-level security features like Windows SmartScreen and Protected View, which rely on MotW to trigger.
 
 **Reproduction Steps:**
-1. Navigate to the attached PoC page (`safe_poc.html`).
-2. Click the "Download Safe Payload" button (or trigger via `onload`).
-3. The browser saves `safe_research_poc.txt` to the Downloads folder.
-4. Run the attached PowerShell script `Check-MotW.ps1 -FilePath .\safe_research_poc.txt`.
+1. Open the attached PoC file (`local_poc.html`) in Chrome.
+2. The page will automatically trigger the PDF creation and download (simulating Zero-Click).
+3. The browser saves `research_payload.pdf` to the Downloads folder.
+4. Run the attached PowerShell script: `Check-MotW.ps1 -FilePath .\research_payload.pdf`
 5. **Result:** The script reports "VULNERABLE: No Mark of the Web found".
 6. **Expected:** The file should have `ZoneId=3` (Internet).
 
